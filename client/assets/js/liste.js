@@ -1,30 +1,36 @@
+import Club from './club.js';
+
 let myHeaders = new Headers();
 let url = '/clubs';
-
 let options = {
     method: 'GET',
     headers: myHeaders,
     mode: 'cors',
     cache: 'default'
 };
+
 let containerListe = document.querySelector('#club');
 
 fetch(url, options)
     .then((res) => {
         if (!res.ok) {
-            throw new Error(`Erreur : ${res.status}`);
+            throw new Error(`Erreur HTTP : ${res.status}`);
         }
         return res.json();
     })
     .then((response) => {
-        console.log('Clubs reçus :', response);
+        console.log('Clubs reçus:', response);
 
         if (response.length === 0) {
-            containerListe.innerHTML = '<p class="alert alert-info">Aucun club trouve</p>';
+            containerListe.innerHTML = '<p class="alert alert-info">Aucun club trouvé.</p>';
             return;
         }
 
-        response.forEach(club => {
+        const clubs = response.map(obj => Club.fromJSON(obj));
+        
+        console.log('Instances de Club créées:', clubs);
+
+        clubs.forEach(club => {
             let colDiv = document.createElement('div');
             colDiv.className = 'col-md-4 mb-4';
 
@@ -43,15 +49,13 @@ fetch(url, options)
             cardText.innerHTML = `
                 <strong>Pays:</strong> ${club.pays}<br>
                 <strong>Niveau:</strong> ${club.niveau}<br>
-                <strong>Stade:</strong> ${club.stade}<br>
-                <strong>Année creation:</strong> ${club.anneeCreation}
             `;
 
             let cardFooter = document.createElement('div');
             cardFooter.className = 'card-footer d-flex justify-content-between';
 
             let btnDetail = document.createElement('a');
-            btnDetail.href = `detail.html#${club._id}`;
+            btnDetail.href = `detail.html#${club.id}`;
             btnDetail.className = 'btn btn-primary btn-sm';
             btnDetail.innerText = 'Voir détails';
 
@@ -59,7 +63,7 @@ fetch(url, options)
             btnDelete.className = 'btn btn-danger btn-sm';
             btnDelete.innerText = 'Supprimer';
             btnDelete.addEventListener('click', () => {
-                supprimerClub(club._id);
+                supprimerClub(club.id);
             });
 
             cardBody.appendChild(cardTitle);
@@ -82,7 +86,7 @@ fetch(url, options)
     });
 
 function supprimerClub(clubId) {
-    if (!confirm('Etes-vous uûr de vouloir supprimer?')) {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce club ?')) {
         return;
     }
 
@@ -93,16 +97,16 @@ function supprimerClub(clubId) {
     })
     .then(res => {
         if (!res.ok) {
-            throw new Error(`Erreur : ${res.status}`);
+            throw new Error(`Erreur HTTP : ${res.status}`);
         }
         return res.json();
     })
     .then(() => {
-        alert('Club supprime !');
+        alert('Club supprimé avec succès');
         window.location.reload();
     })
     .catch(err => {
         console.error('Erreur lors de la suppression:', err);
-        alert('Erreur lors de la suppression du club !');
+        alert('Erreur lors de la suppression du club');
     });
 }
